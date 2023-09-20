@@ -7,6 +7,7 @@ const utilsService = require("./utils.service");
 var totalAds = 0;
 var browser;
 var page;
+var maxTry = 3;
 async function webScrapper() {
   try {
     browser = await puppeteer.launch({ headless: true });
@@ -16,6 +17,9 @@ async function webScrapper() {
     const html = await page.content();
     let $ = cheerio.load(html);
     const pageCount = getTotalPageCount($);
+
+    console.log(`total page found -> ${pageCount}`);
+
     var itemsList = [];
 
     for (var pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
@@ -25,6 +29,8 @@ async function webScrapper() {
       } else {
         url = getNextPageUrl(pageNumber, constants.initialUrl);
       }
+      console.log(`Start scrapping for url -> ${url}`);
+
       $ = await getAdListPageContent(url, page);
       addItems($, itemsList);
       await utilsService.sleep(100);
@@ -37,7 +43,7 @@ async function webScrapper() {
 
     await scrapeTruckItem(itemsList);
   } catch (err) {
-    console.log("error occured", err);
+    console.log("error occured in web scrapping start with error", err);
   }
 }
 
@@ -48,51 +54,58 @@ function getTotalAdCount() {
 function getTotalPageCount($) {
   const paginationElements = $(".e1f09v7o0");
   const pageCount = $(paginationElements[paginationElements.length - 1])
-    .children("span")
-    .text();
+    ?.children("span")
+    ?.text();
   return pageCount;
 }
 
 async function scrapeTruckItem(itemList) {
   for (const item of itemList) {
-    await page.goto(item.url);
-    const html = await page.content();
-    const $ = cheerio.load(html);
+    try {
+      await page.goto(item.url);
+      const html = await page.content();
+      const $ = cheerio.load(html);
 
-    const truckItem = {
-      title: $(".offer-summary .offer-title").text().trim(),
-      itemId: item.id,
-      price: `${$(".offer-price").first().attr("data-price").trim()} ${$(
-        ".offer-price__currency"
-      )
-        .first()
-        .text()
-        .trim()}`,
-    };
+      const truckItem = {
+        title: $(".offer-summary .offer-title")?.text()?.trim(),
+        itemId: item.id,
+        price: `${$(".offer-price").first().attr("data-price").trim()} ${$(
+          ".offer-price__currency"
+        )
+          ?.first()
+          ?.text()
+          ?.trim()}`,
+      };
 
-    const labelList = $(".offer-params__item .offer-params__label");
-    const valueList = $(".offer-params__item .offer-params__value");
+      const labelList = $(".offer-params__item .offer-params__label");
+      const valueList = $(".offer-params__item .offer-params__value");
 
-    let index = 0;
-    for (const label of labelList) {
-      const labelText = $(label).text().trim();
-      const valueText = $(valueList[index]).text().trim();
-      if (labelText == constants.power) {
-        truckItem["power"] = valueText;
+      let index = 0;
+      for (const label of labelList) {
+        const labelText = $(label)?.text()?.trim();
+        const valueText = $(valueList[index])?.text()?.trim();
+        if (labelText == constants.power) {
+          truckItem["power"] = valueText;
+        }
+        if (labelText == constants.milage) {
+          truckItem["mileage"] = valueText;
+        }
+        if (labelText == constants.registrationDate) {
+          truckItem["registrationDate"] = valueText;
+        }
+        if (labelText == constants.productionDate) {
+          truckItem["productionDate"] = valueText;
+        }
+        index++;
       }
-      if (labelText == constants.milage) {
-        truckItem["mileage"] = valueText;
-      }
-      if (labelText == constants.registrationDate) {
-        truckItem["registrationDate"] = valueText;
-      }
-      if (labelText == constants.productionDate) {
-        truckItem["productionDate"] = valueText;
-      }
-      index++;
+
+      fs.appendFileSync("./truck-items.txt", `\n ${JSON.stringify(truckItem)}`);
+      await utilsService.sleep(100);
+    } catch (err) {
+      console.error(
+        `Exception occured in scrapTruckItem with itemid -> ${item.id}`
+      );
     }
-
-    fs.appendFileSync("./truck-items.txt", `\n ${JSON.stringify(truckItem)}`);
   }
 }
 
