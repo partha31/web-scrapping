@@ -1,0 +1,15 @@
+Q. Ideas for error catching/solving, retry strategies?
+
+Ans : First of all use try-catch block for error handle in the code. Proper logging for the error in catch block. If any error occured then I first check the log and then try to investigate the reason of the error. I have experience with retry mechanism. Specially when there need to do a http-request there used retry mechanism with some delay so that if there is any blocking issue from server then it will be resolved.I also have experience with handling failure in message broker like rabbit-mq using dead letter queue and handle the messages.
+	
+Q. Accessing more ads from this link than the limit allows (max 50 pages)?
+
+Ans : In this case implementing a background process for scraping can be a better option where page infos will be send to a queue chunk by chunk and thus no operation will try to access more than 50 pages at a time. Also the performance of the system will be increased. I am considering the limit for a single time synchronization.
+	   
+Q. Experience with CI/CD tools?
+
+Ans:  I have working experience with both AWS and Azure CI/CD pipeline. I am used to with this strategy. I also have experience of implementing CI/CD pipeline for a project.
+	  
+Q. Other considerations?
+
+Ans:  I have deep knowledge on javascript and Typescript language in both frontend and backend. I worked with Angular framework in frontend and NodeJS in Backend.I worked on different project as developer and team lead. I try to give my full effort on the project I am working on.
