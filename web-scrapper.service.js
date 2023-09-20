@@ -62,7 +62,7 @@ function getTotalPageCount($) {
 
 async function scrapeTruckItem(itemList) {
   for (const item of itemList) {
-    scrapIndividualTruck(item, maxTry);
+    await scrapIndividualTruck(item, maxTry);
   }
 }
 
