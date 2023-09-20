@@ -13,3 +13,4 @@ Ans:  I have working experience with both AWS and Azure CI/CD pipeline. I am use
 Q. Other considerations?
 
 Ans:  I have deep knowledge on javascript and Typescript language in both frontend and backend. I worked with Angular framework in frontend and NodeJS in Backend.I worked on different project as developer and team lead. I try to give my full effort on the project I am working on.
+      I didn't use any framework for the project. I have experience with nest framework of node.js. If required I can do that.
