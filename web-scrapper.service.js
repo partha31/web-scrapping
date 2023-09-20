@@ -3,6 +3,7 @@ const cheerio = require("cheerio");
 const puppeteer = require("puppeteer");
 const constants = require("./constants");
 const utilsService = require("./utils.service");
+const { error } = require("console");
 
 var totalAds = 0;
 var browser;
@@ -61,51 +62,59 @@ function getTotalPageCount($) {
 
 async function scrapeTruckItem(itemList) {
   for (const item of itemList) {
-    try {
-      await page.goto(item.url);
-      const html = await page.content();
-      const $ = cheerio.load(html);
+    scrapIndividualTruck(item, maxTry);
+  }
+}
 
-      const truckItem = {
-        title: $(".offer-summary .offer-title")?.text()?.trim(),
-        itemId: item.id,
-        price: `${$(".offer-price").first().attr("data-price").trim()} ${$(
-          ".offer-price__currency"
-        )
-          ?.first()
-          ?.text()
-          ?.trim()}`,
-      };
+async function scrapIndividualTruck(item, retyrCount) {
+  try {
+    await page.goto(item.url);
+    const html = await page.content();
+    const $ = cheerio.load(html);
 
-      const labelList = $(".offer-params__item .offer-params__label");
-      const valueList = $(".offer-params__item .offer-params__value");
+    const truckItem = {
+      title: $(".offer-summary .offer-title")?.text()?.trim(),
+      itemId: item.id,
+      price: `${$(".offer-price").first().attr("data-price").trim()} ${$(
+        ".offer-price__currency"
+      )
+        ?.first()
+        ?.text()
+        ?.trim()}`,
+    };
 
-      let index = 0;
-      for (const label of labelList) {
-        const labelText = $(label)?.text()?.trim();
-        const valueText = $(valueList[index])?.text()?.trim();
-        if (labelText == constants.power) {
-          truckItem["power"] = valueText;
-        }
-        if (labelText == constants.milage) {
-          truckItem["mileage"] = valueText;
-        }
-        if (labelText == constants.registrationDate) {
-          truckItem["registrationDate"] = valueText;
-        }
-        if (labelText == constants.productionDate) {
-          truckItem["productionDate"] = valueText;
-        }
-        index++;
+    const labelList = $(".offer-params__item .offer-params__label");
+    const valueList = $(".offer-params__item .offer-params__value");
+
+    let index = 0;
+    for (const label of labelList) {
+      const labelText = $(label)?.text()?.trim();
+      const valueText = $(valueList[index])?.text()?.trim();
+      if (labelText == constants.power) {
+        truckItem["power"] = valueText;
       }
-
-      fs.appendFileSync("./truck-items.txt", `\n ${JSON.stringify(truckItem)}`);
-      await utilsService.sleep(100);
-    } catch (err) {
-      console.error(
-        `Exception occured in scrapTruckItem with itemid -> ${item.id}`
-      );
+      if (labelText == constants.milage) {
+        truckItem["mileage"] = valueText;
+      }
+      if (labelText == constants.registrationDate) {
+        truckItem["registrationDate"] = valueText;
+      }
+      if (labelText == constants.productionDate) {
+        truckItem["productionDate"] = valueText;
+      }
+      index++;
     }
+
+    fs.appendFileSync("./truck-items.txt", `\n ${JSON.stringify(truckItem)}`);
+    await utilsService.sleep(100);
+  } catch (err) {
+    console.error(
+      `Exception occured in scrapTruckItem with itemid -> ${item.id} -< error -> ${err}`
+    );
+    if (retyrCount <= 0) {
+      return;
+    }
+    scrapIndividualTruck(item, retyrCount - 1);
   }
 }
 
