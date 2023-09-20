@@ -20,4 +20,4 @@ node index.js
 
 ## Output
 
-All outputs are written in truck-items.txt file. Here first the count displayed and the the item list as the expected interface.
+All outputs are written in truck-items.txt file. Here first the count displayed and the the item list as the expected interface. There is partial output of the initial url.
